@@ -69,6 +69,7 @@ public class RecipeTabPresenterTest {
 
     @Test
     public void tabGetScriptAsContent() throws Exception {
+        when(machine.getRecipeType()).thenReturn("dockerfile");
         when(recipeScriptClient.getRecipeScript(any(Machine.class))).thenReturn(recipePromise);
         when(recipePromise.then(any(Operation.class))).thenReturn(recipePromise);
 
@@ -79,5 +80,13 @@ public class RecipeTabPresenterTest {
         verify(view).setScript("test content");
     }
 
+    @Test
+    public void tabSetEmptyScriptAsContentIfRecipeIsNotDockerfile() throws Exception {
+        when(machine.getRecipeType()).thenReturn("image");
+
+        presenter.updateInfo(machine);
+
+        verify(view).setScript("");
+    }
 
 }

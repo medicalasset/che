@@ -43,23 +43,28 @@ public class RecipeTabPresenter implements TabPresenter {
 
     /**
      * Calls special method on view which updates recipe of current machine.
+     * If recipe type is dockerfile, then it's content can be fetched.
      *
      * @param machine
      *         machine for which need update information
      */
     public void updateInfo(@NotNull final Machine machine) {
-        recipeScriptClient.getRecipeScript(machine).then(new Operation<String>() {
-                    @Override
-                    public void apply(String recipe) throws OperationException {
-                        view.setScript(recipe);
-                    }
-                }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError error) throws OperationException {
-                Log.error(RecipeTabPresenter.class,
-                          "Failed to get recipe script for machine " + machine.getId() + ": " + error.getMessage());
-            }
-        });
+        if (machine.getRecipeType().equals("dockerfile")) {
+            recipeScriptClient.getRecipeScript(machine).then(new Operation<String>() {
+                @Override
+                public void apply(String recipe) throws OperationException {
+                    view.setScript(recipe);
+                }
+            }).catchError(new Operation<PromiseError>() {
+                @Override
+                public void apply(PromiseError error) throws OperationException {
+                    Log.error(RecipeTabPresenter.class,
+                              "Failed to get recipe script for machine " + machine.getId() + ": " + error.getMessage());
+                }
+            });
+        }
+        view.setScript("");
+
     }
 
     /** {@inheritDoc} */
