@@ -8,23 +8,18 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.api.parts;
+package org.eclipse.che.ide.part.editor.multipart;
 
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.resource.Path;
+import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
 
-import javax.validation.constraints.NotNull;
+import org.eclipse.che.ide.api.constraints.Direction;
 
 /**
- * Part Stack is tabbed layout element, containing Parts. EditorPartStack is shared
- * across the Perspectives and allows to display EditorParts
- *
- * @author Nikolay Zamosenchuk
+ * @author Roman Nikitenko
  */
-public interface EditorPartStack extends PartStack {
+public interface SplitEditorPartFactory {
 
-    EditorPartPresenter getPartByTabId(@NotNull String tabId);
-
-    PartPresenter getPartByPath(Path path);
-
+    SplitEditorPartView create(IsWidget specimen);
+    SplitEditorPartView create(IsWidget specimen, SplitEditorPartView parent);
 }

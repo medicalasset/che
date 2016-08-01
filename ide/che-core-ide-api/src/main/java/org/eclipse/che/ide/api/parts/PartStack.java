@@ -12,6 +12,7 @@ package org.eclipse.che.ide.api.parts;
 
 import org.eclipse.che.ide.api.constraints.Constraints;
 import org.eclipse.che.ide.api.mvp.Presenter;
+import org.eclipse.che.ide.api.parts.PartStackView.TabItem;
 
 import javax.validation.constraints.NotNull;
 

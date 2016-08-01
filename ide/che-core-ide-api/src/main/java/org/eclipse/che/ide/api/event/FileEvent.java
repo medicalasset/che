@@ -10,8 +10,13 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.event;
 
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import com.google.gwt.event.shared.GwtEvent;
+
+import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.CLOSE;
+import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.OPEN;
+import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.SAVE;
 
 /**
  * Event that describes the fact that file is going to be opened.
@@ -24,6 +29,7 @@ public class FileEvent extends GwtEvent<FileEventHandler> {
     public static Type<FileEventHandler> TYPE = new Type<>();
     private VirtualFile   file;
     private FileOperation fileOperation;
+    private String        tabId;
 
     /**
      * Creates new {@link FileEvent}.
@@ -33,9 +39,35 @@ public class FileEvent extends GwtEvent<FileEventHandler> {
      * @param fileOperation
      *         file operation
      */
-    public FileEvent(VirtualFile file, FileOperation fileOperation) {
+    private FileEvent(VirtualFile file, FileOperation fileOperation) {
         this.file = file;
         this.fileOperation = fileOperation;
+    }
+
+    private FileEvent(String tabId, VirtualFile file, FileOperation fileOperation) {
+        this(file, fileOperation);
+        this.tabId = tabId;
+    }
+
+    /**
+     * Creates a event for {@code FileOperation.OPEN}.
+     */
+    public static FileEvent createOpenFileEvent(VirtualFile file) {
+        return new FileEvent(file, OPEN);
+    }
+
+    /**
+     * Creates a event for {@code FileOperation.CLOSE}.
+     */
+    public static FileEvent createCloseFileEvent(String tabId, VirtualFile file) {
+        return new FileEvent(tabId, file, CLOSE);
+    }
+
+    /**
+     * Creates a event for {@code FileOperation.SAVE}.
+     */
+    public static FileEvent createSaveFileEvent(VirtualFile file) {
+        return new FileEvent(file, SAVE);
     }
 
     /** {@inheritDoc} */
@@ -52,6 +84,11 @@ public class FileEvent extends GwtEvent<FileEventHandler> {
     /** @return the type of operation performed with file */
     public FileOperation getOperationType() {
         return fileOperation;
+    }
+
+    @Nullable
+    public String getTabId() {
+        return tabId;
     }
 
     @Override

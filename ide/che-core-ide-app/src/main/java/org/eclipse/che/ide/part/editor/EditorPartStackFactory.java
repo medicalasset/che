@@ -8,23 +8,14 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.api.parts;
+package org.eclipse.che.ide.part.editor;
 
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.resource.Path;
-
-import javax.validation.constraints.NotNull;
+import org.eclipse.che.ide.api.parts.EditorPartStack;
 
 /**
- * Part Stack is tabbed layout element, containing Parts. EditorPartStack is shared
- * across the Perspectives and allows to display EditorParts
- *
- * @author Nikolay Zamosenchuk
+ * @author Roman Nikitenko
  */
-public interface EditorPartStack extends PartStack {
+public interface EditorPartStackFactory {
 
-    EditorPartPresenter getPartByTabId(@NotNull String tabId);
-
-    PartPresenter getPartByPath(Path path);
-
+    EditorPartStack create();
 }

@@ -18,9 +18,7 @@ import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.event.FileEvent;
-
-import static org.eclipse.che.ide.api.event.FileEvent.FileOperation.CLOSE;
+import org.eclipse.che.ide.api.parts.EditorPartStack;
 
 /**
  * Performs closing all opened editors.
@@ -40,8 +38,12 @@ public class CloseAllAction extends EditorAbstractAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        for (EditorPartPresenter editor : editorAgent.getOpenedEditors()) {
-            eventBus.fireEvent(new FileEvent(editor.getEditorInput().getFile(), CLOSE));
+        EditorPartPresenter openedEditor = editorAgent.getOpenedEditor(getEditorTab(e).getId());
+        EditorPartStack editorPartStack = editorAgent.getGroupForMember(openedEditor);
+        for (EditorPartPresenter editorPart : editorAgent.getOpenedEditors()) {
+            if (editorPartStack.containsPart(editorPart)) {
+                editorAgent.closeEditor(editorPart);
+            }
         }
     }
 }

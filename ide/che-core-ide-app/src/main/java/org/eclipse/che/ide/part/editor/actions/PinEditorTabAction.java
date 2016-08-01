@@ -39,7 +39,7 @@ public class PinEditorTabAction extends EditorAbstractAction {
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventBus.fireEvent(new PinEditorTabEvent(getEditorFile(e), !isPinned(e)));
+        eventBus.fireEvent(new PinEditorTabEvent(getEditorTab(e).getId(), !isPinned(e)));
     }
 
     private boolean isPinned(ActionEvent e) {

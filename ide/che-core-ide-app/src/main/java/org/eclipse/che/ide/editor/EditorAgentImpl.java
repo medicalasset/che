@@ -16,6 +16,7 @@ import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.constraints.Constraints;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorOpenedEvent;
@@ -35,10 +36,12 @@ import org.eclipse.che.ide.api.filetypes.FileType;
 import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
+import org.eclipse.che.ide.api.parts.EditorPartStack;
 import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.PropertyListener;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.resources.VirtualFile;
+import org.eclipse.che.ide.part.editor.multipart.EditorMultiPartStackPresenter;
 import org.eclipse.che.ide.resource.Path;
 
 import javax.validation.constraints.NotNull;
@@ -46,8 +49,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.eclipse.che.ide.api.parts.PartStackType.EDITING;
+import static org.eclipse.che.ide.api.parts.PartStackType.MULTI_EDITING;
 
 /**
  * Default implementation of {@link EditorAgent}.
@@ -64,11 +68,12 @@ public class EditorAgentImpl implements EditorAgent,
                                         WindowActionHandler,
                                         WsAgentStateHandler {
 
-    private final EventBus                 eventBus;
-    private final WorkspaceAgent           workspaceAgent;
-    private final FileTypeRegistry         fileTypeRegistry;
-    private final EditorRegistry           editorRegistry;
-    private final CoreLocalizationConstant coreLocalizationConstant;
+    private final EventBus                      eventBus;
+    private final WorkspaceAgent                workspaceAgent;
+    private final FileTypeRegistry              fileTypeRegistry;
+    private final EditorRegistry                editorRegistry;
+    private final CoreLocalizationConstant      coreLocalizationConstant;
+    private final EditorMultiPartStackPresenter editorMultiPartStack;
 
     private final List<EditorPartPresenter> openedEditors;
     private       List<EditorPartPresenter> dirtyEditors;
@@ -79,12 +84,14 @@ public class EditorAgentImpl implements EditorAgent,
                            FileTypeRegistry fileTypeRegistry,
                            EditorRegistry editorRegistry,
                            WorkspaceAgent workspaceAgent,
-                           CoreLocalizationConstant coreLocalizationConstant) {
+                           CoreLocalizationConstant coreLocalizationConstant,
+                           EditorMultiPartStackPresenter editorMultiPartStack) {
         this.eventBus = eventBus;
         this.fileTypeRegistry = fileTypeRegistry;
         this.editorRegistry = editorRegistry;
         this.workspaceAgent = workspaceAgent;
         this.coreLocalizationConstant = coreLocalizationConstant;
+        this.editorMultiPartStack = editorMultiPartStack;
         this.openedEditors = newArrayList();
 
         eventBus.addHandler(ActivePartChangedEvent.TYPE, this);
@@ -95,7 +102,7 @@ public class EditorAgentImpl implements EditorAgent,
 
     @Override
     public void onClose(EditorPartPresenter editor) {
-        closeEditorPart(editor);
+        closeEditor(editor);
     }
 
     @Override
@@ -105,7 +112,7 @@ public class EditorAgentImpl implements EditorAgent,
                 openEditor(event.getFile());
                 break;
             case CLOSE:
-                closeEditor(event.getFile());
+                closeEditor(event.getTabId());
         }
     }
 
@@ -140,58 +147,66 @@ public class EditorAgentImpl implements EditorAgent,
     @Override
     public void onWsAgentStopped(WsAgentStateEvent event) {
         for (EditorPartPresenter editor : getOpenedEditors()) {
-            closeEditorPart(editor);
+            closeEditor(editor);
         }
     }
 
     @Override
     public void openEditor(@NotNull final VirtualFile file) {
-        doOpen(file, new OpenEditorCallbackImpl());
+        doOpen(file, new OpenEditorCallbackImpl(), null);
     }
 
     @Override
-    public void closeEditor(VirtualFile file) {
-        checkArgument(file != null, "Null file occurred");
+    public void openEditor(@NotNull VirtualFile file, Constraints constraints) {
+        doOpen(file, new OpenEditorCallbackImpl(), constraints);
+    }
 
-        closeEditorPart(getOpenedEditor(file.getLocation()));
+    public void closeEditor(String tabId) {
+        checkArgument(!isNullOrEmpty(tabId), "Null file occurred");
+        closeEditor(getOpenedEditor(tabId));
     }
 
     @Override
     public void openEditor(@NotNull VirtualFile file, @NotNull OpenEditorCallback callback) {
-        doOpen(file, callback);
+        doOpen(file, callback, null);
     }
 
-    private void doOpen(final VirtualFile file, final OpenEditorCallback callback) {
-        EditorPartPresenter openedEditor = getOpenedEditor(file.getLocation());
-        if (openedEditor != null) {
-            workspaceAgent.setActivePart(openedEditor, EDITING);
-            callback.onEditorActivated(openedEditor);
-        } else {
-            FileType fileType = fileTypeRegistry.getFileTypeByFile(file);
-            EditorProvider editorProvider = editorRegistry.getEditor(fileType);
-            final EditorPartPresenter editor = editorProvider.getEditor();
-
-            editor.init(new EditorInputImpl(fileType, file), callback);
-            editor.addCloseHandler(this);
-
-            workspaceAgent.openPart(editor, EDITING);
-            openedEditors.add(editor);
-
-            workspaceAgent.setActivePart(editor);
-            editor.addPropertyListener(new PropertyListener() {
-                @Override
-                public void propertyChanged(PartPresenter source, int propId) {
-                    if (propId == EditorPartPresenter.PROP_INPUT) {
-                        if (editor instanceof HasReadOnlyProperty) {
-                            ((HasReadOnlyProperty)editor).setReadOnly(file.isReadOnly());
-                        }
-
-                        callback.onEditorOpened(editor);
-                        eventBus.fireEvent(new EditorOpenedEvent(file, editor));
-                    }
-                }
-            });
+    private void doOpen(final VirtualFile file, final OpenEditorCallback callback, Constraints constraints) {
+        if (constraints == null && activeEditor != null) {
+            EditorPartStack editorPartStack = editorMultiPartStack.getPartStackByPart(activeEditor);
+            PartPresenter partPresenter = editorPartStack.getPartByPath(file.getLocation());
+            if (partPresenter != null) {
+                workspaceAgent.setActivePart(partPresenter, MULTI_EDITING);
+                callback.onEditorActivated((EditorPartPresenter)partPresenter);
+                return;
+            }
         }
+
+        FileType fileType = fileTypeRegistry.getFileTypeByFile(file);
+        EditorProvider editorProvider = editorRegistry.getEditor(fileType);
+        final EditorPartPresenter editor = editorProvider.getEditor();
+
+        editor.init(new EditorInputImpl(fileType, file), callback);
+        editor.addCloseHandler(this);
+
+        workspaceAgent.openPart(editor, MULTI_EDITING, constraints);
+
+        openedEditors.add(editor);
+
+        workspaceAgent.setActivePart(editor);
+        editor.addPropertyListener(new PropertyListener() {
+            @Override
+            public void propertyChanged(PartPresenter source, int propId) {
+                if (propId == EditorPartPresenter.PROP_INPUT) {
+                    if (editor instanceof HasReadOnlyProperty) {
+                        ((HasReadOnlyProperty)editor).setReadOnly(file.isReadOnly());
+                    }
+
+                    callback.onEditorOpened(editor);
+                    eventBus.fireEvent(new EditorOpenedEvent(file, editor));
+                }
+            }
+        });
     }
 
     @Override
@@ -210,7 +225,8 @@ public class EditorAgentImpl implements EditorAgent,
         return dirtyEditors;
     }
 
-    protected void closeEditorPart(EditorPartPresenter editor) {
+    @Override
+    public void closeEditor(EditorPartPresenter editor) {
         if (editor == null) {
             return;
         }
@@ -219,15 +235,14 @@ public class EditorAgentImpl implements EditorAgent,
 
         editor.close(false);
 
-        if (activeEditor == null) {
-            return;
-        }
-
-        final VirtualFile closedFile = editor.getEditorInput().getFile();
-        final VirtualFile activeFile = activeEditor.getEditorInput().getFile();
-        if (activeFile.equals(closedFile)) {
+        if (activeEditor != null && activeEditor == editor) {
             activeEditor = null;
         }
+    }
+
+    @Override
+    public EditorPartStack getGroupForMember(EditorPartPresenter groupMember) {
+        return editorMultiPartStack.getPartStackByPart(groupMember);
     }
 
     @NotNull
@@ -245,6 +260,11 @@ public class EditorAgentImpl implements EditorAgent,
         }
 
         return null;
+    }
+
+    @Override
+    public EditorPartPresenter getOpenedEditor(String tabId) {
+        return editorMultiPartStack.getPartByTabId(tabId);
     }
 
     /** {@inheritDoc} */

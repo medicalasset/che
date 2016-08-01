@@ -38,6 +38,6 @@ public class CloseAllExceptPinnedAction extends EditorAbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        eventBus.fireEvent(new CloseNonPinnedEditorsEvent());
+        eventBus.fireEvent(new CloseNonPinnedEditorsEvent(getEditorTab(e).getId()));
     }
 }

@@ -17,8 +17,10 @@ import com.google.web.bindery.event.shared.EventBus;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
+import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.event.FileEvent;
 import org.eclipse.che.ide.api.event.FileEventHandler;
+import org.eclipse.che.ide.api.parts.EditorPartStack;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 
 import javax.validation.constraints.NotNull;
@@ -37,15 +39,20 @@ import static org.eclipse.che.ide.workspace.perspectives.project.ProjectPerspect
 @Singleton
 public class ReopenClosedFileAction extends AbstractPerspectiveAction implements FileEventHandler {
 
-    private final EventBus             eventBus;
+    private final EventBus    eventBus;
+    private final EditorAgent editorAgent;
 
-    private VirtualFile lastClosed;
+    private VirtualFile     lastClosed;
+    private EditorPartStack groupLastClosed;
 
     @Inject
-    public ReopenClosedFileAction(EventBus eventBus, CoreLocalizationConstant locale) {
+    public ReopenClosedFileAction(EventBus eventBus,
+                                  CoreLocalizationConstant locale,
+                                  EditorAgent editorAgent) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), locale.editorTabReopenClosedTab(), locale.editorTabReopenClosedTabDescription(), null,
               null);
         this.eventBus = eventBus;
+        this.editorAgent = editorAgent;
         eventBus.addHandler(FileEvent.TYPE, this);
     }
 
@@ -54,6 +61,9 @@ public class ReopenClosedFileAction extends AbstractPerspectiveAction implements
     public void onFileOperation(FileEvent event) {
         if (event.getOperationType() == CLOSE) {
             lastClosed = event.getFile();
+//            editorAgent.getGroupForMember()
+
+
         } else if (event.getOperationType() == OPEN && lastClosed != null && lastClosed.equals(event.getFile())) {
             lastClosed = null;
         }
@@ -68,6 +78,6 @@ public class ReopenClosedFileAction extends AbstractPerspectiveAction implements
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        eventBus.fireEvent(new FileEvent(lastClosed, OPEN));
+        eventBus.fireEvent(FileEvent.createOpenFileEvent(lastClosed));
     }
 }

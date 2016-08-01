@@ -16,29 +16,30 @@ import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.action.ActionEvent;
+import org.eclipse.che.ide.api.constraints.Constraints;
 import org.eclipse.che.ide.api.editor.EditorAgent;
-import org.eclipse.che.ide.api.event.FileEvent;
-import org.eclipse.che.ide.api.resources.VirtualFile;
+
+import static org.eclipse.che.ide.api.constraints.Direction.HORIZONTALLY;
 
 /**
- * Performs closing selected editor.
+ * Adds copy of selected editor and divides area of the editor horizontally.
  *
- * @author Vlad Zhukovskiy
+ * @author Roman Nikitenko
  */
 @Singleton
-public class CloseAction extends EditorAbstractAction {
+public class SplitHorizontallyAction extends EditorAbstractAction {
 
     @Inject
-    public CloseAction(EditorAgent editorAgent,
-                       EventBus eventBus,
-                       CoreLocalizationConstant locale) {
-        super(locale.editorTabClose(), locale.editorTabCloseDescription(), null, editorAgent, eventBus);
+    public SplitHorizontallyAction(EditorAgent editorAgent,
+                                   EventBus eventBus,
+                                   CoreLocalizationConstant locale) {
+        super(locale.editorTabSplitHorizontally(), locale.editorTabSplitHorizontallyDescription(), null, editorAgent, eventBus);
     }
 
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {
-        VirtualFile virtualFile = getEditorFile(e);
-        eventBus.fireEvent(FileEvent.createCloseFileEvent(getEditorTab(e).getId(), virtualFile));
+        Constraints constraints = new Constraints(HORIZONTALLY, getEditorTab(e).getId());
+        editorAgent.openEditor(getEditorFile(e), constraints);
     }
 }

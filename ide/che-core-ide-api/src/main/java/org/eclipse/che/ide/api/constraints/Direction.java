@@ -8,23 +8,24 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.api.parts;
-
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.resource.Path;
-
-import javax.validation.constraints.NotNull;
+package org.eclipse.che.ide.api.constraints;
 
 /**
- * Part Stack is tabbed layout element, containing Parts. EditorPartStack is shared
- * across the Perspectives and allows to display EditorParts
+ * Defines possible directions of an item relative to another item.
  *
- * @author Nikolay Zamosenchuk
+ * @author Roman Nikitenko
  */
-public interface EditorPartStack extends PartStack {
+public enum Direction {
 
-    EditorPartPresenter getPartByTabId(@NotNull String tabId);
+    /**
+     * Direction type that specifies the item to be the horizontally at the
+     * moment of addition.
+     */
+    HORIZONTALLY,
 
-    PartPresenter getPartByPath(Path path);
-
+    /**
+     * Direction type that specifies the item to be the vertically at the
+     * moment of addition.
+     */
+    VERTICALLY
 }

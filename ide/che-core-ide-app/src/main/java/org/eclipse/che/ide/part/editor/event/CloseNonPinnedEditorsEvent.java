@@ -33,6 +33,16 @@ public class CloseNonPinnedEditorsEvent extends GwtEvent<CloseNonPinnedEditorsEv
         return TYPE;
     }
 
+    private final String tabId;
+
+    public CloseNonPinnedEditorsEvent(String tabId) {
+        this.tabId = tabId;
+    }
+
+    public String getTabId() {
+        return tabId;
+    }
+
     /** {@inheritDoc} */
     @Override
     public Type<CloseNonPinnedEditorsHandler> getAssociatedType() {
