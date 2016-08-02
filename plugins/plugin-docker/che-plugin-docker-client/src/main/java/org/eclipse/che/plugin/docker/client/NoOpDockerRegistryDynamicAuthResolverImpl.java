@@ -17,8 +17,7 @@ import java.util.Map;
 /**
  * @author Mykola Morhun
  */
-public class DockerRegistryDynamicAuthResolverImpl implements  DockerRegistryDynamicAuthResolver {
-    // we haven't supported registries with dynamic password yet
+public class NoOpDockerRegistryDynamicAuthResolverImpl implements DockerRegistryDynamicAuthResolver {
     @Override
     public AuthConfig getDynamicXRegistryAuth(String registry) {
         return null;

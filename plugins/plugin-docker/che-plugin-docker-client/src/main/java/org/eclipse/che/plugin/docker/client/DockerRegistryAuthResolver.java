@@ -103,11 +103,7 @@ public class DockerRegistryAuthResolver {
         if (paramAuthConfigs != null && paramAuthConfigs.getConfigs() != null) {
             authConfigs.putAll(paramAuthConfigs.getConfigs());
         }
-
-        Map<String, AuthConfig> dynamicConfigs = dynamicAuthResolver.getDynamicXRegistryConfig();
-        if (dynamicConfigs != null) {
-            authConfigs.putAll(dynamicConfigs);
-        }
+        authConfigs.putAll(dynamicAuthResolver.getDynamicXRegistryConfig());
 
         authConfigs = normalizeDockerHubRegistryUrl(authConfigs);
 

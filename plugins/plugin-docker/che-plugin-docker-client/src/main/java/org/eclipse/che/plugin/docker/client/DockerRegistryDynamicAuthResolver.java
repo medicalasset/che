@@ -30,9 +30,9 @@ public interface DockerRegistryDynamicAuthResolver {
 
     /**
      * Retrieves all actual auth configs for all registries with dynamic auth credentials.
-     * Returns null if no registries with dynamic auth credentials configured.
+     * Returns empty map if no registries with dynamic auth credentials configured.
      *
-     * @return all dynamic auth configs or null if no credentials configured
+     * @return all dynamic auth configs or empty map if no credentials configured
      */
     Map<String, AuthConfig> getDynamicXRegistryConfig();
 
