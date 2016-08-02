@@ -12,12 +12,20 @@ package org.eclipse.che.plugin.docker.client;
 
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 
+import java.util.Map;
+
 /**
  * @author Mykola Morhun
  */
 public class DockerRegistryDynamicAuthResolverImpl implements  DockerRegistryDynamicAuthResolver {
+    // we haven't supported registries with dynamic password yet
     @Override
-    public AuthConfig getDynamicAuthConfig(String registry) {
-        return null; // we haven't supported registries with dynamic password yet
+    public AuthConfig getDynamicXRegistryAuth(String registry) {
+        return null;
+    }
+
+    @Override
+    public Map<String, AuthConfig> getDynamicXRegistryConfig() {
+        return null;
     }
 }

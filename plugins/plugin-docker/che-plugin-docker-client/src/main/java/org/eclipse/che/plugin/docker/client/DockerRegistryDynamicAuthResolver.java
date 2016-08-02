@@ -12,6 +12,8 @@ package org.eclipse.che.plugin.docker.client;
 
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 
+import java.util.Map;
+
 /**
  * Resolves dynamic auth config for docker registries.
  *
@@ -19,11 +21,19 @@ import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
  */
 public interface DockerRegistryDynamicAuthResolver {
     /**
-     * Retrieves actual auth config for specified registry.
+     * Retrieves actual auth data for specified registry.
      * Returns null if no credential configured for specified registry.
      *
-     * @return actual auth config for specified registry or null if no credentials configured
+     * @return actual auth data for specified registry or null if no credentials configured
      */
-    AuthConfig getDynamicAuthConfig(String registry);
+    AuthConfig getDynamicXRegistryAuth(String registry);
+
+    /**
+     * Retrieves all actual auth configs for all registries with dynamic auth credentials.
+     * Returns null if no registries with dynamic auth credentials configured.
+     *
+     * @return all dynamic auth configs or null if no credentials configured
+     */
+    Map<String, AuthConfig> getDynamicXRegistryConfig();
 
 }

@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
@@ -140,7 +139,7 @@ public class DockerRegistryAuthResolverTest {
     @BeforeMethod
     private void setup() {
         when(initialAuthConfig.getAuthConfigs()).thenReturn(initialAuthConfigs);
-        when(dynamicAuthResolver.getDynamicAuthConfig(any(String.class))).thenReturn(null);
+        when(dynamicAuthResolver.getDynamicXRegistryAuth(any(String.class))).thenReturn(null);
     }
 
     @Test
