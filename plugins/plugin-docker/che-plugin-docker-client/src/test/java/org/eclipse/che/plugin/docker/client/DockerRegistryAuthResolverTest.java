@@ -25,6 +25,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 
@@ -93,7 +95,9 @@ public class DockerRegistryAuthResolverTest {
     private static final String EMPTY_JSON       = "{}";
 
     @Mock
-    private InitialAuthConfig initialAuthConfig;
+    private InitialAuthConfig                 initialAuthConfig;
+    @Mock
+    private DockerRegistryDynamicAuthResolver dynamicAuthResolver;
 
     private AuthConfigs initialAuthConfigs;
     private AuthConfigs customAuthConfigs;
@@ -102,6 +106,7 @@ public class DockerRegistryAuthResolverTest {
 
     @InjectMocks
     private DockerRegistryAuthResolver authResolver;
+
 
 
     @BeforeClass
@@ -135,6 +140,7 @@ public class DockerRegistryAuthResolverTest {
     @BeforeMethod
     private void setup() {
         when(initialAuthConfig.getAuthConfigs()).thenReturn(initialAuthConfigs);
+        when(dynamicAuthResolver.getDynamicAuthConfig(any(String.class))).thenReturn(null);
     }
 
     @Test
